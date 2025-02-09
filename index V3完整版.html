@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>採購登記表單</title>
+
+    <!-- Font Icon -->
+    <link rel="stylesheet" href="fonts/material-icon/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="vendor/nouislider/nouislider.min.css">
+
+    <!-- Main css -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main">
+        <div class="container">
+            <div class="signup-content">
+                <div class="signup-img">
+                    <img src="images/form-img.jpg" alt="">
+                    <div class="signup-img-content">
+                        <h2>採購登記</h2>
+                        <p>不填就讓你絕頂升天</p>
+                    </div>
+                </div>
+                <div class="signup-form" id="formContainer">
+                    <form action="https://script.google.com/macros/s/AKfycbwjCSk5Khe4a7RrZS3c-1U1UIkUSAbhsASNxD3ZNfUdQKA2DBjRJG4qcDCUYpcXjydt/exec" method="POST" class="register-form" id="procurementForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="form-input">
+                                    <label for="buyer" class="required">採購人</label>
+                                    <input type="text" name="buyer" id="buyer" placeholder="請填入採購者" required />
+                                    <small>如: 村長 Lily 梁哥 LEO</small>
+                                </div>
+                                <div class="form-input">
+                                    <label for="product_name" class="required">商品名稱</label>
+                                    <input type="text" name="product_name" id="product_name" placeholder="簡述採購品項" required />
+                                    <small>如 : 萬代一番賞 大魔 最後賞</small>
+                                </div>
+                                <div class="form-input">
+                                    <label for="quantity" class="required">數量</label>
+                                    <input type="number" name="quantity" id="quantity" placeholder="請填入整數" required />
+                                    <small>商品數量很多，可合併在這，備註打在下面</small>
+                                </div>
+                                <div class="form-input">
+                                    <label for="price" class="required">單價</label>
+                                    <input type="number" name="price" id="price" placeholder="預設單位:日圓" required />
+                                    <small>商品單價,如為贈品寫 0 即可</small>
+                                </div>
+                                <div class="form-input">
+                                    <label for="location" class="required">取得地點</label>
+                                    <input type="text" name="location" id="location" placeholder="簡述取得商品地點或對象 如 東京塔 XX設計師" required />                                    
+                                </div>
+                                <div class="form-input">
+                                    <label for="note">採購備註</label>
+                                    <textarea name="note" id="note" placeholder="簡述相關資訊，例如一件2箱、一件8個有5個是村長3個是LEO的...等。"></textarea>                                    
+                                </div>
+                                <div class="form-input">
+                                    <label for="imageUpload">照片上傳 (選填)</label>
+                                    <input type="file" id="imageUpload" accept="image/*">
+                                    <input type="hidden" name="image_url" id="imageUrl">
+                                    <input type="hidden" name="image_short_url" id="imageShortUrl">
+                                    <p id="uploadStatus" style="display:none; color:blue;">📤 圖片上傳中...</p>
+                                    <p id="uploadSuccess" style="display:none; color:green;">✅ 圖片上傳成功！</p>
+                                    <p id="uploadFail" style="display:none; color:red;">❌ 圖片上傳失敗</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-submit">
+                            <button type="submit" class="submit" id="submitButton">提交</button>
+                            <p id="submissionStatus" style="display:none; color:blue;">🔄 提交中...</p>
+                            <p id="submissionSuccess" style="display:none; color:green;">✅ 提交成功！</p>
+                            <p id="submissionFail" style="display:none; color:red;">❌ 提交失敗</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/nouislider/nouislider.min.js"></script>
+    <script src="vendor/wnumb/wNumb.js"></script>
+    <script src="vendor/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="vendor/jquery-validation/dist/additional-methods.min.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+
+    document.getElementById("note").value = "無";
+    document.getElementById("quantity").value = "1";
+    document.getElementById("imageUpload").addEventListener("change", function() {
+        var file = this.files[0];
+        if (file) {
+            document.getElementById("uploadStatus").style.display = "block";
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                uploadToImgur(event.target.result.split(',')[1]);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function uploadToImgur(base64Image) {
+        var clientId = "7459443c6af1fdd";
+        var url = "https://api.imgur.com/3/image";
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": "Client-ID " + clientId,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ image: base64Image, type: "base64" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("uploadStatus").style.display = "none";
+            if (data.success) {
+                document.getElementById("imageUrl").value = data.data.link;
+                document.getElementById("uploadSuccess").style.display = "block";
+                setTimeout(() => { document.getElementById("uploadSuccess").style.display = "none"; }, 3000);
+            } else {
+                document.getElementById("uploadFail").style.display = "block";
+                setTimeout(() => { document.getElementById("uploadFail").style.display = "none"; }, 3000);
+            }
+        });
+    }
+
+    document.getElementById("procurementForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        document.getElementById("submissionStatus").style.display = "block";
+        var formData = new FormData(this);
+        fetch(this.action, {
+            method: "POST",
+            body: formData
+        }).then(response => response.text())
+        .then(responseText => {
+            document.getElementById("submissionStatus").style.display = "none";
+            document.getElementById("submissionSuccess").style.display = "block";
+            setTimeout(() => { location.reload(); }, 3000);
+        }).catch(error => {
+            document.getElementById("submissionStatus").style.display = "none";
+            document.getElementById("submissionFail").style.display = "block";
+            setTimeout(() => { document.getElementById("submissionFail").style.display = "none"; }, 3000);
+        });
+    });
+    </script>
+</body>
+</html>
